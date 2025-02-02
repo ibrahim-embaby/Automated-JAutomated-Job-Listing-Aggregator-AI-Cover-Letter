@@ -1,0 +1,669 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [3540, 600],
+      "id": "80609fe1-f526-46f5-9107-6ab5ddcb8f7c",
+      "name": "Google Gemini Chat Model",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "jsCode": "const jobs = $input.all().map(job => { return {job_title: job.json.title, job_url: job.json.url} });\n\nreturn jobs"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1860, 420],
+      "id": "4fc26e3a-1ea9-4367-a803-81d980f0a937",
+      "name": "Extract Job Title And Url Fields"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [2100, 420],
+      "id": "f943e17e-bafe-45d6-b073-dbe596f387f2",
+      "name": "Loop Over Jobs"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.job_url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2380, 520],
+      "id": "1b164482-1748-405b-af78-eca6ac72b1c3",
+      "name": "Fetch Job Web Page"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "description",
+              "cssSelector": ".show-more-less-html__markup--clamp-after-5"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [2560, 520],
+      "id": "88fedd21-6279-42e5-8d7c-c91ef285b84c",
+      "name": "Scrape Job Description"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [2760, 500],
+      "id": "4479795e-b89a-49c4-8ae2-15958fa037cf",
+      "name": "Merge Title, Url, and Description"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [3260, 320],
+      "id": "d307491c-3946-4823-a020-2ff45fa6a6b6",
+      "name": "Merge Job Details and User Resume",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [4360, 520],
+      "id": "652ded58-c78b-4b1d-86e5-20887a139c28",
+      "name": "Merge Job Details and Cover Letter"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "<result document id>",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18V6XSlqJlUoYD6ZPBNqAzeJY6K59pRT1vDsiJLVB4BE/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "job_title": "={{ $json.job_title }}",
+            "job_url": "={{ $json.job_url }}",
+            "job_description": "={{ $json.description }}",
+            "cover_letter": "={{ $json.output.cover_letter }}"
+          },
+          "matchingColumns": ["job_url"],
+          "schema": [
+            {
+              "id": "job_title",
+              "displayName": "job_title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "job_url",
+              "displayName": "job_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "job_description",
+              "displayName": "job_description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "cover_letter",
+              "displayName": "cover_letter",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [4540, 520],
+      "id": "9124bc84-e470-4226-8581-0120b079fd3f",
+      "name": "Save Data to Google Sheet",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "<skills document id>",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "",
+          "mode": "list",
+          "cachedResultName": "",
+          "cachedResultUrl": ""
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [1040, 420],
+      "id": "46b5fd57-7a83-4f14-8d33-9339153b41c5",
+      "name": "get my skills"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.output }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "### Your Role:\nYou are an AI specializing in **validating and correcting JSON responses**.\n\n### Your Task:\n1. **Receive a raw JSON response** from another AI model.\n2. **Ensure the JSON is properly formatted**:\n   - No unnecessary escaping (`\\\\` should not be doubled).\n   - The response must follow the expected schema **exactly**.\n   - If the response is invalid, **fix it** without changing the meaning.\n3. **Return a clean, structured JSON output**, following this schema:\n\n```json\n{\n  \"cover_letter\": \"Your generated cover letter here\"\n}\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [3960, 320],
+      "id": "1e28b438-e1ce-4c2c-931c-4ec46ffc2e17",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [3960, 580],
+      "id": "dc332053-6a55-48e6-9d43-c0e7fcc083a1",
+      "name": "Google Gemini Chat Model1"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"cover_letter\": \"your cover letter\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [4140, 580],
+      "id": "80f7a0ee-a5d4-496f-a226-25283617c096",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 6
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [720, 420],
+      "id": "80d7db8e-5ba7-4997-81e0-b8151acdc630",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputData = $input.all();\nconst result = {\n  mySkills: inputData.map(item => item.json.my_skills)\n};\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1240, 420],
+      "id": "79f5b9b4-f713-4d2a-a170-9e447501efc2",
+      "name": "Merge skills in one array"
+    },
+    {
+      "parameters": {
+        "content": "## 1. Trigger: Schedule Trigger\n\nNode Type: Scheduale Trigger\n\n- Runs the workflow at a scheduled time (6 AM).\n- Initiates the job search process.",
+        "height": 800,
+        "width": 360
+      },
+      "id": "59c460da-cd86-48cd-a299-8ad2dd74b7e0",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [600, 0],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "url": "https://linkedin-job-search-api.p.rapidapi.com/active-jb-7d",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "location_filter",
+              "value": "Egypt"
+            },
+            {
+              "name": "advanced_title_filter",
+              "value": "={{$json.mySkills.join(\"|\") }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-rapidapi-host",
+              "value": "linkedin-job-search-api.p.rapidapi.com"
+            },
+            {
+              "name": "x-rapidapi-key",
+              "value": "<your api key>"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1520, 420],
+      "id": "045de758-236b-466b-8fa9-bfc9970c8d73",
+      "name": "Get latest related jobs on linkedin",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "documentURL": "<resume document id>"
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [2980, 300],
+      "id": "0300f0e0-1a58-4293-a42c-882754fb63e7",
+      "name": "Get Resume"
+    },
+    {
+      "parameters": {
+        "content": "# Overview\nThis n8n workflow automates the process of retrieving job listings, extracting job details, generating AI-assisted cover letters, and saving the data to a Google Sheet. It integrates with LinkedIn, Google Sheets, Google Docs, and AI models like Google Gemini.\n\n### Prerequisites\n- Before running this workflow, ensure you have the following:\n- n8n Installed: Set up n8n on your local machine or cloud instance.\n- RapidAPI Account: Sign up at RapidAPI and subscribe to the LinkedIn Jobs API.\n- Google Sheets Access: A Google account with access to a Google Sheet for storing job applications.\n- Google Docs Access: A Google Doc containing your resume.\n- Google Gemini API Key: Access to Google Gemini (PaLM) API for AI-driven cover letter generation.\n\n### Key Integrations\n- LinkedIn API: Fetches job listings based on user skills.\n- Google Sheets: Stores user skills and saves job application data.\n- Google Docs: Retrieves the user’s resume.\n- Google Gemini AI: Generates and validates cover letters.",
+        "height": 800,
+        "width": 600
+      },
+      "id": "12f6b4e1-fad3-494e-923d-be87c64c7180",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-20, 0],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 2. Fetch Skills from Google Sheet\n\nNode Types: Google sheets, Code\n\n- Retrieves user skills from a Google Sheet named \"my skills.\n- Data is merged into an array via Merge skills in one array.",
+        "height": 800,
+        "width": 400
+      },
+      "id": "907bf842-d623-49b2-a8d0-6241e96a43b6",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [980, 0],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 3. Fetch Job Listings\n\nNode Type: HTTP Request\n\n- Calls an API to get job listings based on the extracted skills and location (Egypt).\n- Uses the API: https://linkedin-job-search-api.p.rapidapi.com/active-jb-7d from RapidAPI.\n- To use this setup, create an account on RapidAPI and subscribe to this API.\n- Copy these headers and add them to the HTTP Request node:\n   - x-rapidapi-host: linkedin-jobs-api2.p.rapidapi.com\n   - x-rapidapi-key: <your API key>",
+        "height": 800,
+        "width": 360
+      },
+      "id": "0a219961-b220-4431-a9e5-34b333be03b0",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [1400, 0],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 4. Extract Job Details\n\nNode Types: Code, Loop Over Items\n\n- Extracts the job title and job URL from the retrieved listings.\n- Jobs are processed in batches (Loop Over Jobs).",
+        "height": 800,
+        "width": 520
+      },
+      "id": "71439202-daeb-4203-8b3b-ff10573d22cc",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [1780, 0],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 5. Fetch Job Description\n\nNode Types: HttP Request, HTML, Merge\n\n- Retrieves the job posting webpage.\n- Scrape Job Description extracts the job description using a CSS selector.\n- Data is merged (Merge Title, Url, and Description).",
+        "height": 800,
+        "width": 580
+      },
+      "id": "6c600e6a-b349-4b85-b281-51bbb75fbded",
+      "name": "Sticky Note5",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [2320, 0],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 6. Retrieve Resume\n\nNode Types: Google Docs, Merge\n\n- Fetches the user’s resume from Google Docs.\n- Merges resume content with job details (Merge Job Details and User Resume).",
+        "height": 800,
+        "width": 520
+      },
+      "id": "d5ba07bf-20b1-4926-86a5-4d4267586655",
+      "name": "Sticky Note6",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [2920, 0],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 7. Generate Cover Letter\n\nNode Type: AI Agent\nChat Model: Google Gemini Chat Model\n\n- Uses an AI model (Google Gemini) to generate a customized cover letter.\n- The AI follows a structured prompt to extract relevant details and format a professional cover letter.",
+        "height": 800,
+        "width": 400
+      },
+      "id": "a3126495-27ce-4a71-9c35-556c36062479",
+      "name": "Sticky Note7",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [3460, 0],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "agent": "reActAgent",
+        "promptType": "define",
+        "text": "=### Job Posting Details:\n- **Job Title:** {{ $json.job_title }}\n- **Job URL:** {{ $json.job_url }}\n- **Job Description:** {{ $json.description }}\n\n### My Resume Content:\n{{ $json.content }}",
+        "hasOutputParser": true,
+        "options": {
+          "prefix": "You are an expert career assistant specializing in crafting personalized cover letters.\n\n### Your Task:\n1. Analyze both my resume and the job description.\n2. Identify the most relevant skills and experience from my resume that align with the job.\n3. Write a **professional and engaging** cover letter tailored to the role, following this structure:\n   - **Introduction:** Express enthusiasm for the position.\n   - **Key Skills & Experience:** Highlight relevant qualifications and achievements.\n   - **Conclusion:** End with a compelling closing statement and call to action.\n4. Address the letter generically as **\"Dear Hiring Manager,\"**\n\n### Output Format:\n- **Return ONLY JSON** (no extra text).\n- **Ensure the response is valid JSON** (without unnecessary escaping or nested quotes).\n- **Follow this exact structure**:\n\n```json\n{{\n  \"cover_letter\": \"Your generated cover letter here\"\n}}\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [3520, 320],
+      "id": "b22fab6b-5dea-4270-8132-598ee21716b3",
+      "name": "Generate Cover Letter",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "content": "## 8. Validate AI Response\n\nNode Types: AI Agent\nChat Model: Google Gemini Chat Model\nOutput Parser: Structured Output Parser\n\n- Ensures the AI-generated JSON output is valid and properly formatted.\n- Uses Google Gemini Chat Model for validation.\n- Structured output is parsed using Structured Output Parser.",
+        "height": 800,
+        "width": 400
+      },
+      "id": "73846b49-7a6e-4e93-99c3-16c2df9acfd3",
+      "name": "Sticky Note8",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [3880, 0],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 9. Save to Google Sheets\n\nNode Types: Merge, Google Sheets\n\n- Combines job details and AI-generated cover letter.\n- Save Data to Google Sheet updates the sheet with:\n   - Job Title\n   - Job URL\n   - Job Description\n   - Cover Letter",
+        "height": 800,
+        "width": 400
+      },
+      "id": "adbe3fd1-1c4c-402a-8ba1-ad15fbc38bad",
+      "name": "Sticky Note9",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [4300, 0],
+      "typeVersion": 1
+    }
+  ],
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Cover Letter",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Job Title And Url Fields": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Jobs": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Get Resume",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Job Web Page",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge Title, Url, and Description",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Job Web Page": {
+      "main": [
+        [
+          {
+            "node": "Scrape Job Description",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape Job Description": {
+      "main": [
+        [
+          {
+            "node": "Merge Title, Url, and Description",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Title, Url, and Description": {
+      "main": [
+        [
+          {
+            "node": "Merge Job Details and User Resume",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Merge Job Details and Cover Letter",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Job Details and User Resume": {
+      "main": [
+        [
+          {
+            "node": "Generate Cover Letter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Job Details and Cover Letter": {
+      "main": [
+        [
+          {
+            "node": "Save Data to Google Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Data to Google Sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get my skills": {
+      "main": [
+        [
+          {
+            "node": "Merge skills in one array",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Merge Job Details and Cover Letter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "get my skills",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge skills in one array": {
+      "main": [
+        [
+          {
+            "node": "Get latest related jobs on linkedin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get latest related jobs on linkedin": {
+      "main": [
+        [
+          {
+            "node": "Extract Job Title And Url Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Resume": {
+      "main": [
+        [
+          {
+            "node": "Merge Job Details and User Resume",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Cover Letter": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ba6d740e28adffa486fef51e40634f09618db011c9d007a90f51275d9687cf87"
+  }
+}

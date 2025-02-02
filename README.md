@@ -1,6 +1,7 @@
 # Automated-Job-Listing-Aggregator-AI-Cover-Letter-Generator
 
-![Screenshot 2025-02-02 235320](https://github.com/user-attachments/assets/bbe25ab9-a8d5-4a1c-9705-c7933625664c)
+![Screenshot 2025-02-02 235320](https://github.com/user-attachments/assets/7545f0b8-4b06-467e-8d8c-c65aab086633)
+
 
 ## Overview
 
